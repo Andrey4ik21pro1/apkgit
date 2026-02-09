@@ -31,7 +31,7 @@ jobs:
         uses: gradle/actions/wrapper-validation@v4
 
       - name: Decode Keystore
-        run: echo "$SIGNING_KEY" | base64 --decode > release_key.jks
+        run: echo "$SIGNING_KEY" | base64 --decode > app/release_key.jks
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
