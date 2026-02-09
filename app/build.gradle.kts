@@ -26,6 +26,7 @@ android {
             storeFile = file("release_key.jks")
             storePassword = System.getenv("KEY_STORE_PASSWORD")
             keyAlias = System.getenv("ALIAS")
+            keyPassword = System.getenv("KEY_STORE_PASSWORD")
         }
     }
     buildTypes {
