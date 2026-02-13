@@ -87,11 +87,30 @@ fun LanguageSelectorDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    val languages = listOf(
-        "en" to stringResource(R.string.lang_en),
-        "ru" to stringResource(R.string.lang_ru),
-        "uk" to stringResource(R.string.lang_uk)
+    val languageCodes = listOf(
+        "en", // English
+        "ru", // Russian
+        "uk", // Ukrainian
+        "de", // German
+        "fr", // French
+        "es", // Spanish
+        "it", // Italian
+        "pt", // Portuguese
+        "pl", // Polish
+        "nl", // Dutch
+        "tr", // Turkish
+        "zh", // Chinese
+        "ja", // Japanese
+        "ko", // Korean
+        "ar", // Arabic
+        "hi"  // Hindi
     )
+    val languages = languageCodes.map { code ->
+        val locale = Locale.forLanguageTag(code)
+        val name = locale.getDisplayLanguage(locale)
+            .replaceFirstChar { it.titlecase(locale) }
+        code to name
+    }
 
     var selectedLang by remember { mutableStateOf(initialLang) }
 
@@ -99,8 +118,12 @@ fun LanguageSelectorDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_language_dialog_title)) },
         text = {
-            Column(Modifier.selectableGroup()) {
-                languages.forEach { (key, name) ->
+            LazyColumn(
+                Modifier
+                    .selectableGroup()
+                    .heightIn(max = 168.dp)
+            ) {
+                items(languages) { (key, name) ->
                     Row(
                         Modifier
                             .fillMaxWidth()

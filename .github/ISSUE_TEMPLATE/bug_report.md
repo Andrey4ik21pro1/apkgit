@@ -26,7 +26,7 @@ Attach Logcat output, stacktrace, or screenshots if available.
 
 **Environment**
 - App version:
-- Android version (OS):
+- Android version:
 - Device / Emulator:
 - Build variant (debug/release):
 

@@ -23,7 +23,7 @@ import java.net.URL
 private data class GitHubAsset(val name: String, @SerialName("browser_download_url") val browserDownloadUrl: String)
 
 @Serializable
-private data class GitHubReleaseInfo(@SerialName("tag_name") val tagName: String, val assets: List<GitHubAsset> = emptyList())
+private data class GitHubReleaseInfo(val assets: List<GitHubAsset> = emptyList())
 
 @Serializable
 data class AppEntry(
@@ -45,7 +45,7 @@ object ConfigManager {
     var current: AppConfigData by mutableStateOf(AppConfigData(emptyList()))
         private set
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope = CoroutineScope(SupervisorJob())
     private val mutex = Mutex()
     private val downloadSemaphore = Semaphore(3)
 
@@ -59,7 +59,7 @@ object ConfigManager {
     /// Logic ///
 
     private fun createDefaultConfig(context: Context, forceSave: Boolean = false): AppConfigData {
-        val appName = context.getString(R.string.app_name)
+        val name = context.getString(R.string.app_name)
         val packageName = context.packageName
         val githubLink = context.getString(R.string.about_github_link)
 
@@ -73,23 +73,27 @@ object ConfigManager {
                 }
             }
 
-        val packageInfo = context.packageManager.getPackageInfo(packageName, 0)
-        val appVersion = packageInfo.versionName ?: "N/A"
+        val pm = context.packageManager
+        val installedVersion = try {
+            pm.getPackageInfo(packageName, 0).versionName ?: "N/A"
+        } catch (e: PackageManager.NameNotFoundException) {
+            "N/A"
+        }
 
         val data = AppConfigData(apps = listOf(
             AppEntry(
-                name = appName,
+                name = name,
                 owner = owner,
                 repo = repo,
                 filter = "ApkGit-v*.apk",
                 packageName = packageName,
-                installedVersion = appVersion,
+                installedVersion = installedVersion,
                 latestVersion = "N/A"
             )
         ))
 
         if (forceSave) {
-            scope.launch {
+            scope.launch(Dispatchers.IO) {
                 mutex.withLock { save(context, data) }
                 checkAllUpdates(context)
             }
@@ -153,7 +157,7 @@ object ConfigManager {
             try {
                 val content = file.readText()
                 current = json.decodeFromString<AppConfigData>(content)
-                scope.launch { refreshInstalledVersions(context) }
+                scope.launch(Dispatchers.IO) { refreshInstalledVersions(context) }
             } catch (e: Exception) {
                 if (e is SerializationException || e is IllegalArgumentException) {
                     current = createDefaultConfig(context, forceSave = true)
@@ -168,15 +172,27 @@ object ConfigManager {
     }
 
     fun refreshInstalledVersions(context: Context) {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             if (current.apps.isEmpty()) return@launch
 
             val pm = context.packageManager
             mutex.withLock {
                 val updatedApps = current.apps.map { app ->
-                    val installedVersion = getCleanedVersionName(pm, app.packageName)
-                    if (app.installedVersion != installedVersion) {
-                        app.copy(installedVersion = installedVersion)
+                    val installedVersion = try {
+                        pm.getPackageInfo(app.packageName, 0).versionName ?: "N/A"
+                    } catch (e: PackageManager.NameNotFoundException) {
+                        "N/A"
+                    }
+
+                    val name = try {
+                        val appInfo = pm.getApplicationInfo(app.packageName, 0)
+                        pm.getApplicationLabel(appInfo).toString()
+                    } catch (e: PackageManager.NameNotFoundException) {
+                        app.name
+                    }
+
+                    if (app.installedVersion != installedVersion || app.name != name) {
+                        app.copy(installedVersion = installedVersion, name = name)
                     } else {
                         app
                     }
@@ -199,11 +215,14 @@ object ConfigManager {
                         val resultJson = downloadSemaphore.withPermit { fetchGithubApi(app.owner, app.repo, token) }
                         val releaseInfo = json.decodeFromString<GitHubReleaseInfo>(resultJson)
 
-                        val asset = releaseInfo.assets.firstOrNull { createFilterRegex(app.filter).matches(it.name) }
-                        val newVersion = asset?.let { extractVersionFromFilename(it.name, app.filter) }
-                            ?: releaseInfo.tagName
+                        val asset = releaseInfo.assets.firstOrNull { matchesFilter(it.name, app.filter) }
+                        val newVersion = asset?.let { extractVersionFromFilename(it.name, app.filter) } ?: "N/A"
 
-                        val installedVersion = getCleanedVersionName(context.packageManager, app.packageName)
+                        val installedVersion = try {
+                            context.packageManager.getPackageInfo(app.packageName, 0).versionName ?: "N/A"
+                        } catch (e: PackageManager.NameNotFoundException) {
+                            "N/A"
+                        }
 
                         app.copy(latestVersion = newVersion, installedVersion = installedVersion)
                     } catch (e: Exception) {
@@ -242,22 +261,24 @@ object ConfigManager {
     }
 
     fun clearCache(context: Context, type: String) {
-        try {
-            val cacheDir = context.cacheDir
-            val files = cacheDir.listFiles { file ->
-                file.isFile && file.extension.equals(type, ignoreCase = true)
-            }
-            files?.forEach { file ->
-                try { file.delete() }
-                catch (e: Exception) {}
-            }
+        scope.launch(Dispatchers.IO) {
+            try {
+                val cacheDir = context.cacheDir
+                val files = cacheDir.listFiles { file ->
+                    file.isFile && file.extension.equals(type, ignoreCase = true)
+                }
+                files?.forEach { file ->
+                    try { file.delete() }
+                    catch (e: Exception) {}
+                }
 
-            val message = context.getString(R.string.success)
-            showToast(context, message, Toast.LENGTH_SHORT)
+                val message = context.getString(R.string.success)
+                showToast(context, message, Toast.LENGTH_SHORT)
 
-        } catch (e: Exception) {
-            val message = context.getString(R.string.error, e.message ?: "Unknown error")
-            showToast(context, message)
+            } catch (e: Exception) {
+                val message = context.getString(R.string.error, e.message ?: "Unknown error")
+                showToast(context, message)
+            }
         }
     }
 
@@ -278,9 +299,9 @@ object ConfigManager {
                 appInfo.sourceDir = apkFile.absolutePath
                 appInfo.publicSourceDir = apkFile.absolutePath
 
-                val appName = appInfo.loadLabel(pm).toString()
+                val name = appInfo.loadLabel(pm).toString()
                 val packageName = appInfo.packageName
-                val latestVersion = extractVersionFromFilename(apkFile.name, filter) ?: packageInfo.versionName ?: "N/A"
+                val latestVersion = extractVersionFromFilename(apkFile.name, filter) ?: "N/A"
 
                 try {
                     val iconDrawable = appInfo.loadIcon(pm)
@@ -291,9 +312,13 @@ object ConfigManager {
                     e.printStackTrace()
                 }
 
-                val installedVersion = getCleanedVersionName(pm, packageName)
+                val installedVersion = try {
+                    pm.getPackageInfo(packageName, 0).versionName ?: "N/A"
+                } catch (e: PackageManager.NameNotFoundException) {
+                    "N/A"
+                }
                 val newApp = AppEntry(
-                    name = appName, owner = owner, repo = repo, filter = filter,
+                    name = name, owner = owner, repo = repo, filter = filter,
                     packageName = packageName, installedVersion = installedVersion, latestVersion = latestVersion
                 )
                 mutex.withLock {
@@ -336,7 +361,7 @@ object ConfigManager {
             val resultJson = fetchGithubApi(owner, repo, token)
             val releaseInfo = json.decodeFromString<GitHubReleaseInfo>(resultJson)
 
-            val asset = releaseInfo.assets.firstOrNull { createFilterRegex(filter).matches(it.name) }
+            val asset = releaseInfo.assets.firstOrNull { matchesFilter(it.name, filter) }
                 ?: throw Exception("No matching APK found for filter")
 
             val apkFile = File(context.cacheDir, asset.name)
@@ -385,7 +410,7 @@ object ConfigManager {
     }
 
     fun deleteApp(context: Context, packageName: String) {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             mutex.withLock {
                 val newApps = current.apps.filter { it.packageName != packageName }
                 if (newApps != current.apps) {
@@ -396,7 +421,7 @@ object ConfigManager {
     }
 
     fun reorderApps(context: Context, newAppOrder: List<AppEntry>) {
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             mutex.withLock {
                 val currentMap = current.apps.associateBy { it.packageName }
                 val updatedApps = newAppOrder.mapNotNull { currentMap[it.packageName] }
@@ -415,22 +440,21 @@ object ConfigManager {
         }
     }
 
-    private fun getCleanedVersionName(pm: PackageManager, packageName: String): String {
-        return try {
-            pm.getPackageInfo(packageName, 0).versionName?.split('-')?.first() ?: "N/A"
-        } catch (e: PackageManager.NameNotFoundException) {
-            "N/A"
+    private fun matchesFilter(filename: String, filter: String): Boolean {
+        return if (filter.contains("*")) {
+            val pattern = filter.replace(".", "\\.").replace("*", ".*")
+            Regex(pattern).matches(filename)
+        } else {
+            filename == filter
         }
     }
 
-    private fun extractVersionFromFilename(filename: String, filter: String): String? {
-        if (!filter.contains("*")) return null
-        val regexPattern = filter.replace(".", "\\.").replace("*", "(.+)")
-        return Regex(regexPattern).find(filename)?.groupValues?.get(1)
-    }
-
-    private fun createFilterRegex(filter: String): Regex {
-        val pattern = filter.replace(".", "\\.").replace("*", ".*")
-        return Regex(pattern)
+    private fun extractVersionFromFilename(filename: String, filter: String): String {
+        return if (filter.contains("*")) {
+            val pattern = filter.replace(".", "\\.").replace("*", "(.+)")
+            Regex(pattern).find(filename)?.groupValues?.get(1) ?: "N/A"
+        } else {
+            "N/A"
+        }
     }
 }

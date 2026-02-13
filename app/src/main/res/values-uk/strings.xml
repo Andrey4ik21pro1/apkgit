@@ -25,9 +25,6 @@
     <string name="success">Успішно</string>
     <string name="error">Помилка: %s</string>
     <string name="are_you_sure">Ви впевнені?</string>
-    <string name="lang_en">Англійська</string>
-    <string name="lang_ru">Російська</string>
-    <string name="lang_uk">Українська</string>
     <string name="settings_theme_dialog_title">Оберіть тему:</string>
     <string name="theme_system">Системна</string>
     <string name="theme_light">Світла</string>
