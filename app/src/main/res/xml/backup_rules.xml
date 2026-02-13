@@ -4,6 +4,4 @@
    <include domain="file" path="config.json"/>
    <include domain="sharedpref" path="."/>
 
-   <exclude domain="cache" path="."/>
-
 </full-backup-content>
