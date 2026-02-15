@@ -50,26 +50,25 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
     var filter by remember { mutableStateOf("") }
 
     val isOwnerValid = remember(repoOwner) {
-        repoOwner.trim().none { it.isWhitespace() || it == '/' }
+        repoOwner.trim().none { it.isWhitespace() || it == '/' || it == '\\' }
     }
     val isRepoValid = remember(repoName) {
-        repoName.trim().none { it.isWhitespace() || it == '/' }
+        repoName.trim().none { it.isWhitespace() || it == '/' || it == '\\' }
+    }
+    val isFilterValid = remember(filter) {
+        filter.trim().none { it == '/' || it == '\\' }
     }
 
     val finalFilter = remember(filter) {
         val trimmed = filter.trim()
         if (trimmed.isBlank() || trimmed.endsWith(".apk")) trimmed else "$trimmed.apk"
     }
-    val isDuplicate = remember(repoOwner, repoName, finalFilter, filter) {
-        if (filter.isNotBlank() && repoOwner.isNotBlank() && repoName.isNotBlank()) {
-            ConfigManager.current.apps.any { it.owner == repoOwner.trim() && it.repo == repoName.trim() && it.filter == finalFilter }
-        } else {
-            false
-        }
+    val isDuplicate = remember(repoOwner, repoName, finalFilter) {
+        ConfigManager.current.apps.any { it.owner == repoOwner.trim() && it.repo == repoName.trim() && it.filter == finalFilter }
     }
 
     ModalBottomSheet(
-        onDismissRequest = { if (!isLoading) onDismiss() },
+        onDismissRequest = { onDismiss() },
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
@@ -111,9 +110,11 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                 value = filter,
                 onValueChange = { filter = it },
                 label = { Text(stringResource(R.string.add_filter)) },
-                isError = isDuplicate,
+                isError = isDuplicate || !isFilterValid,
                 supportingText = if (isDuplicate) {
                     { Text(stringResource(R.string.duplicate)) }
+                } else if (!isFilterValid) {
+                    { Text(stringResource(R.string.invalid_characters)) }
                 } else null,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -128,7 +129,10 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                         onDismiss()
                     }
                 },
-                enabled = !isLoading && repoOwner.trim().isNotBlank() && isOwnerValid && repoName.trim().isNotBlank() && isRepoValid && !isDuplicate && filter.trim().isNotEmpty(),
+                enabled = !isLoading && !isDuplicate &&
+                        repoOwner.isNotBlank() && isOwnerValid &&
+                        repoName.isNotBlank() && isRepoValid &&
+                        filter.isNotBlank() && isFilterValid,
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text(stringResource(R.string.add))
@@ -259,10 +263,10 @@ fun AppItem(
 ) {
     val installedVersion = app.installedVersion.trim()
     val latestVersion = app.latestVersion.trim()
-    val showUpdateIcon = installedVersion != latestVersion && latestVersion != "N/A"
+    val showUpdateIcon = installedVersion != latestVersion && latestVersion != "N/A" && latestVersion.isNotBlank()
 
     val version = when {
-        installedVersion == "N/A" -> ""
+        installedVersion == "N/A" || installedVersion.isBlank() -> ""
         showUpdateIcon -> " ($installedVersion -> $latestVersion)"
         else -> " ($installedVersion)"
     }
@@ -445,6 +449,7 @@ fun AppList(searchQuery: String, modifier: Modifier = Modifier) {
                 Button(
                     onClick = {
                         localApps.remove(app)
+                        ConfigManager.reorderApps(context, localApps.toList())
                         if (localApps.isEmpty()) isInDragMode = false
                         appToDelete = null
                     }

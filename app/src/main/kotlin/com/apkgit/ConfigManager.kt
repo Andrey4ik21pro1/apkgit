@@ -250,6 +250,10 @@ object ConfigManager {
                 if (newData.apps.isEmpty()) throw Exception("Config contains no apps")
 
                 mutex.withLock { save(context, newData) }
+
+                refreshInstalledVersions(context)
+                checkAllUpdates(context)
+
                 val message = context.getString(R.string.success)
                 showToast(context, message, Toast.LENGTH_SHORT)
 
@@ -405,17 +409,6 @@ object ConfigManager {
             } catch (e: Exception) {
                 val message = context.getString(R.string.error, e.message ?: "Unknown error")
                 showToast(context, message)
-            }
-        }
-    }
-
-    fun deleteApp(context: Context, packageName: String) {
-        scope.launch(Dispatchers.IO) {
-            mutex.withLock {
-                val newApps = current.apps.filter { it.packageName != packageName }
-                if (newApps != current.apps) {
-                    save(context, current.copy(apps = newApps))
-                }
             }
         }
     }
