@@ -41,12 +41,11 @@ jobs:
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           ALIAS: ${{ secrets.ALIAS }}
 
-      - name: Upload Debug APK
-        if: ${{ inputs.build_type == 'debug' }}
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: app-${{ inputs.build_type }}
+          path: ${{ inputs.build_type == 'release' && 'app/build/outputs/apk/release/app-release.apk' || 'app/build/outputs/apk/debug/app-debug.apk' }}
 
       - name: Extract versionName
         if: ${{ inputs.build_type == 'release' }}
