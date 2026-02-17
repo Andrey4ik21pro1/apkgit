@@ -127,7 +127,8 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                         try {
                             onAddClick(repoOwner.trim(), repoName.trim(), finalFilter)
                             onDismiss()
-                        } finally {
+                        } catch (e: Exception) {}
+                        finally {
                             isLoading = false
                         }
                     }
