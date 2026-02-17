@@ -334,6 +334,7 @@ object ConfigManager {
                 try { apkFile?.delete() } catch (e: Exception) {}
                 val message = context.getString(R.string.error, e.message ?: "Unknown error")
                 showToast(context, message)
+                throw e
             }
         }
     }

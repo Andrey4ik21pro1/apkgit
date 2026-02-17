@@ -124,9 +124,12 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                 onClick = {
                     scope.launch {
                         isLoading = true
-                        onAddClick(repoOwner.trim(), repoName.trim(), finalFilter)
-                        isLoading = false
-                        onDismiss()
+                        try {
+                            onAddClick(repoOwner.trim(), repoName.trim(), finalFilter)
+                            onDismiss()
+                        } finally {
+                            isLoading = false
+                        }
                     }
                 },
                 enabled = !isLoading && !isDuplicate &&
