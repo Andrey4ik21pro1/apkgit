@@ -1,40 +1,38 @@
-HELP.md
-.gradle
+# Gradle files
+.gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+# Kotlin Gradle plugin data
+.kotlin/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log/OS Files
+*.log
+.DS_Store
+
+# Android Studio generated files and folders
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+
+# IntelliJ
 *.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Keystore files
+*.jks
+*.keystore
 
-### VS Code ###
-.vscode/
+# Google Services (e.g. APIs or Firebase)
+google-services.json
 
-### Kotlin ###
-.kotlin
+# Android Profiling
+*.hprof

@@ -31,6 +31,7 @@ jobs:
         uses: gradle/actions/wrapper-validation@v4
 
       - name: Decode Keystore
+        if: ${{ inputs.build_type == 'release' }}
         run: echo "$SIGNING_KEY" | base64 --decode > app/release_key.jks
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -47,20 +48,19 @@ jobs:
           name: app-${{ inputs.build_type }}
           path: ${{ inputs.build_type == 'release' && 'app/build/outputs/apk/release/app-release.apk' || 'app/build/outputs/apk/debug/app-debug.apk' }}
 
-      - name: Extract versionName
+      - name: Extract version
         if: ${{ inputs.build_type == 'release' }}
-        id: app_version
+        id: version
         run: |
           version=$(jq -r '.elements[0].versionName' app/build/outputs/apk/release/output-metadata.json)
-          echo "appVersion=$version" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: ${{ inputs.build_type == 'release' }}
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: app/build/outputs/apk/release/app-release.apk
-          tag: v${{ steps.app_version.outputs.appVersion }}
-          asset_name: ApkGit-v${{ steps.app_version.outputs.appVersion }}.apk
-          release_name: ${{ steps.app_version.outputs.appVersion }}
+          tag: v${{ steps.version.outputs.version }}
+          asset_name: ApkGit-v${{ steps.version.outputs.version }}.apk
+          release_name: ${{ steps.version.outputs.version }}
           overwrite: true
