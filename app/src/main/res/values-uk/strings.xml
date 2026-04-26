@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">Видалити всі кешовані іконки та прев’ю</string>
     <string name="apps_add">Додати додаток</string>
     <string name="add">Додати</string>
+    <string name="add_use_url">Використовувати URL замість цього</string>
+    <string name="add_url">URL репозиторію</string>
     <string name="add_owner">Власник</string>
     <string name="add_repo">Репозиторій</string>
     <string name="add_filter">Фільтр</string>

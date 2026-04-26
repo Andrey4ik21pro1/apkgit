@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">删除所有缓存的图标和预览</string>
     <string name="apps_add">添加应用</string>
     <string name="add">添加</string>
+    <string name="add_use_url">改用 URL</string>
+    <string name="add_url">仓库 URL</string>
     <string name="add_owner">所有者</string>
     <string name="add_repo">仓库</string>
     <string name="add_filter">筛选</string>

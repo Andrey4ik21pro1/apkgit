@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">캐시된 모든 아이콘 및 미리보기 삭제</string>
     <string name="apps_add">앱 추가</string>
     <string name="add">추가</string>
+    <string name="add_use_url">대신 URL 사용</string>
+    <string name="add_url">리포지토리 URL</string>
     <string name="add_owner">소유자</string>
     <string name="add_repo">리포지토리</string>
     <string name="add_filter">필터</string>

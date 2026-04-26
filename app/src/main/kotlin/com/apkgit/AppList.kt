@@ -45,9 +45,16 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
 
+    var isUrlMode by remember { mutableStateOf(false) }
+    var repoUrl by remember { mutableStateOf("") }
+
     var repoOwner by remember { mutableStateOf("") }
     var repoName by remember { mutableStateOf("") }
     var filter by remember { mutableStateOf("") }
+
+    val isUrlValid = remember(repoUrl) {
+        repoUrl.isBlank() || repoUrl.trim().startsWith("http")
+    }
 
     val isOwnerValid = remember(repoOwner) {
         repoOwner.trim().none { it.isWhitespace() || it == '/' || it == '\\' }
@@ -63,8 +70,42 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
         val trimmed = filter.trim()
         if (trimmed.isBlank() || trimmed.endsWith(".apk")) trimmed else "$trimmed.apk"
     }
+
     val isDuplicate = remember(repoOwner, repoName, finalFilter) {
         ConfigManager.current.apps.any { it.owner == repoOwner.trim() && it.repo == repoName.trim() && it.filter == finalFilter }
+    }
+
+    val isFilterInvalid = remember(isDuplicate, isFilterValid) {
+        isDuplicate || !isFilterValid
+    }
+
+    // validation
+    val isFormValid = remember(
+        isLoading,
+        isUrlMode,
+        repoUrl,
+        isUrlValid,
+        repoOwner,
+        isOwnerValid,
+        repoName,
+        isRepoValid,
+        filter,
+        isFilterValid,
+        isDuplicate
+    ) {
+        if (isLoading) return@remember false
+
+        if (isUrlMode) {
+            repoUrl.isNotBlank() && isUrlValid
+        } else {
+            repoOwner.isNotBlank() &&
+            isOwnerValid &&
+            repoName.isNotBlank() &&
+            isRepoValid &&
+            filter.isNotBlank() &&
+            isFilterValid &&
+            !isDuplicate
+        }
     }
 
     ModalBottomSheet(
@@ -82,42 +123,67 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
         ) {
             Text(text = stringResource(R.string.apps_add), style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = repoOwner,
-                onValueChange = { repoOwner = it },
-                label = { Text(stringResource(R.string.add_owner)) },
-                isError = !isOwnerValid,
-                supportingText = if (!isOwnerValid) {
-                    { Text(stringResource(R.string.invalid_characters)) }
-                } else null,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = repoName,
-                onValueChange = { repoName = it },
-                label = { Text(stringResource(R.string.add_repo)) },
-                isError = !isRepoValid,
-                supportingText = if (!isRepoValid) {
-                    { Text(stringResource(R.string.invalid_characters)) }
-                } else null,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(stringResource(R.string.add_use_url))
+                Switch(
+                    checked = isUrlMode,
+                    onCheckedChange = { isUrlMode = it }
+                )
+            }
+            if (isUrlMode) {
+                OutlinedTextField(
+                    value = repoUrl,
+                    onValueChange = { repoUrl = it },
+                    label = { Text(stringResource(R.string.add_url)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = if (!isUrlValid) {
+                        { Text(stringResource(R.string.invalid_characters)) }
+                    } else null,
+                    singleLine = true,
+                    isError = !isUrlValid
+                )
+            } else {
+                OutlinedTextField(
+                    value = repoOwner,
+                    onValueChange = { repoOwner = it },
+                    label = { Text(stringResource(R.string.add_owner)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = if (!isOwnerValid) {
+                        { Text(stringResource(R.string.invalid_characters)) }
+                    } else null,
+                    singleLine = true,
+                    isError = !isOwnerValid
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = repoName,
+                    onValueChange = { repoName = it },
+                    label = { Text(stringResource(R.string.add_repo)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = if (!isRepoValid) {
+                        { Text(stringResource(R.string.invalid_characters)) }
+                    } else null,
+                    singleLine = true,
+                    isError = !isRepoValid
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = filter,
                 onValueChange = { filter = it },
                 label = { Text(stringResource(R.string.add_filter)) },
-                isError = isDuplicate || !isFilterValid,
+                modifier = Modifier.fillMaxWidth(),
                 supportingText = if (isDuplicate) {
                     { Text(stringResource(R.string.duplicate)) }
                 } else if (!isFilterValid) {
                     { Text(stringResource(R.string.invalid_characters)) }
                 } else null,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = isFilterInvalid
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
@@ -125,7 +191,18 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                     scope.launch {
                         isLoading = true
                         try {
-                            onAddClick(repoOwner.trim(), repoName.trim(), finalFilter)
+                            if (isUrlMode) {
+                                val path = repoUrl.trimEnd()
+                                    .substringAfter("github.com/")
+                                    .split("/")
+                                    .filter { it.isNotBlank() }
+
+                                if (path.size >= 2) {
+                                    onAddClick(path[0], path[1], finalFilter)
+                                }
+                            } else {
+                                onAddClick(repoOwner.trim(), repoName.trim(), finalFilter)
+                            }
                             onDismiss()
                         } catch (e: Exception) {}
                         finally {
@@ -133,10 +210,7 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                         }
                     }
                 },
-                enabled = !isLoading && !isDuplicate &&
-                        repoOwner.isNotBlank() && isOwnerValid &&
-                        repoName.isNotBlank() && isRepoValid &&
-                        filter.isNotBlank() && isFilterValid,
+                enabled = isFormValid,
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text(stringResource(R.string.add))

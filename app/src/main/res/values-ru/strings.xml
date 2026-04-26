@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">Удалить все кэшированные иконки и превью</string>
     <string name="apps_add">Добавить приложение</string>
     <string name="add">Добавить</string>
+    <string name="add_use_url">Использовать URL вместо этого</string>
+    <string name="add_url">URL репозитория</string>
     <string name="add_owner">Владелец</string>
     <string name="add_repo">Репозиторий</string>
     <string name="add_filter">Фильтр</string>

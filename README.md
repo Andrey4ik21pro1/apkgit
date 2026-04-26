@@ -1,7 +1,7 @@
 
 # ApkGit
 
-![License](https://img.shields.io/badge/License-GNU%20v3.0-blue?style=for-the-badge)  ![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![License](https://img.shields.io/badge/License-GPL%20v3.0-blue?style=for-the-badge)  ![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)  ![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 
 ### A Material 3 client to update apps from GitHub
 

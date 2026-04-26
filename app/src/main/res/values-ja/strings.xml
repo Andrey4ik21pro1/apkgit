@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">すべてのキャッシュされたアイコンとプレビューを削除</string>
     <string name="apps_add">アプリを追加</string>
     <string name="add">追加</string>
+    <string name="add_use_url">代わりにURLを使用する</string>
+    <string name="add_url">リポジトリURL</string>
     <string name="add_owner">所有者</string>
     <string name="add_repo">リポジトリ</string>
     <string name="add_filter">フィルタ</string>

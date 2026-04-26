@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">सभी कैश किए गए आइकन और प्रीव्यू हटाएँ</string>
     <string name="apps_add">ऐप जोड़ें</string>
     <string name="add">जोड़ें</string>
+    <string name="add_use_url">इसके बजाय URL का उपयोग करें</string>
+    <string name="add_url">रिपॉजिटरी URL</string>
     <string name="add_owner">मालिक</string>
     <string name="add_repo">रिपोजिटरी</string>
     <string name="add_filter">फ़िल्टर</string>

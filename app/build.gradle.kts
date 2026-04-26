@@ -13,12 +13,11 @@ android {
         applicationId = "com.apkgit"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.2"
+        versionCode = 5
+        versionName = "1.1.3"
 
         ndk {
-            abiFilters.add("arm64-v8a")
-            abiFilters.add("armeabi-v7a")
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
     }
 
@@ -26,7 +25,7 @@ android {
         create("release") {
             val storeFile = file("release_key.jks")
             val storePassword = System.getenv("KEY_STORE_PASSWORD")
-            val keyAlias = System.getenv("ALIAS")
+            val keyAlias = System.getenv("KEY_STORE_ALIAS")
             val keyPassword = System.getenv("KEY_STORE_PASSWORD")
 
             if (storeFile.exists() && !storePassword.isNullOrBlank() && !keyAlias.isNullOrBlank() && !keyPassword.isNullOrBlank()) {

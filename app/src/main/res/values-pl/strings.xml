@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">Usuń wszystkie buforowane ikony i podglądy</string>
     <string name="apps_add">Dodaj aplikację</string>
     <string name="add">Dodaj</string>
+    <string name="add_use_url">Użyj adresu URL zamiast tego</string>
+    <string name="add_url">URL repozytorium</string>
     <string name="add_owner">Właściciel</string>
     <string name="add_repo">Repozytorium</string>
     <string name="add_filter">Filtr</string>

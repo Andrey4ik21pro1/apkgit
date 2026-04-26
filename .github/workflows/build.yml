@@ -40,7 +40,7 @@ jobs:
         run: ./gradlew assemble${{ inputs.build_type == 'release' && 'Release' || 'Debug' }}
         env:
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_ALIAS: ${{ secrets.KEY_STORE_ALIAS }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

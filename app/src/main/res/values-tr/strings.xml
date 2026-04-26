@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">Tüm önbelleğe alınmış simgeleri ve önizlemeleri sil</string>
     <string name="apps_add">Uygulama ekle</string>
     <string name="add">Ekle</string>
+    <string name="add_use_url">Bunun yerine URL kullan</string>
+    <string name="add_url">Depo URL\'si</string>
     <string name="add_owner">Sahip</string>
     <string name="add_repo">Depo</string>
     <string name="add_filter">Filtre</string>

@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">Excluir todos os ícones e visualizações em cache</string>
     <string name="apps_add">Adicionar aplicativo</string>
     <string name="add">Adicionar</string>
+    <string name="add_use_url">Usar URL em vez disso</string>
+    <string name="add_url">URL do repositório</string>
     <string name="add_owner">Proprietário</string>
     <string name="add_repo">Repositório</string>
     <string name="add_filter">Filtro</string>

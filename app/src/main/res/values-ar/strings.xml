@@ -43,6 +43,8 @@
     <string name="backup_clear_icons_cache_subtitle">حذف جميع الأيقونات والصور المصغرة المخزنة مؤقتًا</string>
     <string name="apps_add">إضافة تطبيق</string>
     <string name="add">إضافة</string>
+    <string name="add_use_url">استخدم رابط URL بدلاً من ذلك</string>
+    <string name="add_url">رابط المستودع</string>
     <string name="add_owner">المالك</string>
     <string name="add_repo">المستودع</string>
     <string name="add_filter">الفلتر</string>

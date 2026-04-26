@@ -46,6 +46,8 @@
     <string name="backup_clear_icons_cache_subtitle">Remove all cached icons and previews</string>
     <string name="apps_add">Add application</string>
     <string name="add">Add</string>
+    <string name="add_use_url">Use URL instead</string>
+    <string name="add_url">Repository URL</string>
     <string name="add_owner">Owner</string>
     <string name="add_repo">Repository</string>
     <string name="add_filter">Filter</string>
