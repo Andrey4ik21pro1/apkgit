@@ -55,7 +55,6 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
     val isUrlValid = remember(repoUrl) {
         repoUrl.isBlank() || repoUrl.trim().startsWith("http")
     }
-
     val isOwnerValid = remember(repoOwner) {
         repoOwner.trim().none { it.isWhitespace() || it == '/' || it == '\\' }
     }
@@ -66,13 +65,32 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
         filter.trim().none { it == '/' || it == '\\' }
     }
 
+    val parsedPath = remember(repoUrl, isUrlMode) {
+        if (isUrlMode) {
+            repoUrl.trim()
+                .substringAfter("github.com/")
+                .split("/")
+                .filter { it.isNotBlank() }
+        } else emptyList()
+    }
+
+    val finalOwner = remember(isUrlMode, parsedPath, repoOwner) {
+        if (isUrlMode) parsedPath.getOrNull(0) ?: "" else repoOwner.trim()
+    }
+    val finalRepo = remember(isUrlMode, parsedPath, repoName) {
+        if (isUrlMode) parsedPath.getOrNull(1) ?: "" else repoName.trim()
+    }
     val finalFilter = remember(filter) {
         val trimmed = filter.trim()
         if (trimmed.isBlank() || trimmed.endsWith(".apk")) trimmed else "$trimmed.apk"
     }
 
-    val isDuplicate = remember(repoOwner, repoName, finalFilter) {
-        ConfigManager.current.apps.any { it.owner == repoOwner.trim() && it.repo == repoName.trim() && it.filter == finalFilter }
+    val isDuplicate = remember(finalOwner, finalRepo, finalFilter) {
+        ConfigManager.current.apps.any {
+            it.owner == finalOwner &&
+            it.repo == finalRepo &&
+            it.filter == finalFilter
+        }
     }
 
     val isFilterInvalid = remember(isDuplicate, isFilterValid) {
@@ -83,11 +101,10 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
     val isFormValid = remember(
         isLoading,
         isUrlMode,
-        repoUrl,
         isUrlValid,
-        repoOwner,
+        finalOwner,
         isOwnerValid,
-        repoName,
+        finalRepo,
         isRepoValid,
         filter,
         isFilterValid,
@@ -95,16 +112,19 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
     ) {
         if (isLoading) return@remember false
 
+        val commonValid = filter.isNotBlank() && isFilterValid && !isDuplicate
+
         if (isUrlMode) {
-            repoUrl.isNotBlank() && isUrlValid
+            isUrlValid &&
+            finalOwner.isNotBlank() &&
+            finalRepo.isNotBlank() &&
+            commonValid
         } else {
-            repoOwner.isNotBlank() &&
+            finalOwner.isNotBlank() &&
             isOwnerValid &&
-            repoName.isNotBlank() &&
+            finalRepo.isNotBlank() &&
             isRepoValid &&
-            filter.isNotBlank() &&
-            isFilterValid &&
-            !isDuplicate
+            commonValid
         }
     }
 
@@ -191,18 +211,7 @@ fun AddAppBottomSheet(onDismiss: () -> Unit, onAddClick: suspend (owner: String,
                     scope.launch {
                         isLoading = true
                         try {
-                            if (isUrlMode) {
-                                val path = repoUrl.trimEnd()
-                                    .substringAfter("github.com/")
-                                    .split("/")
-                                    .filter { it.isNotBlank() }
-
-                                if (path.size >= 2) {
-                                    onAddClick(path[0], path[1], finalFilter)
-                                }
-                            } else {
-                                onAddClick(repoOwner.trim(), repoName.trim(), finalFilter)
-                            }
+                            onAddClick(finalOwner, finalRepo, finalFilter)
                             onDismiss()
                         } catch (e: Exception) {}
                         finally {
